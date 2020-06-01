@@ -8,6 +8,11 @@ const messageSchema = new mongoose.Schema(
       required: [true, 'Author is required!'],
       index: true,
     },
+    recieverId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: [true, 'Reciever is required!'],
+    },
     title: {
       type: String,
       trim: true,
