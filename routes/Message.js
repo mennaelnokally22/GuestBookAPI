@@ -9,25 +9,18 @@ const checkValidationErrors = require('../helpers/checkValidation');
 const authUser = require('../middlewares/auth');
 const checkMessageOwner = require('../middlewares/authMessageOwner');
 
-//Get Pages of Blogs for home page
+//Get received messages
 
-// router.get(
-//   '/pages/:pageNum',
-//   asyncRouterWrapper(async (req, res, next) => {
-//     const pageNum = req.params.pageNum;
-//     console.log('pageNum', pageNum);
-//     const pageSize = 4;
-//     const blogsPromise = Blog.find({})
-//       .populate({ path: 'authorId', select: 'firstName lastName' })
-//       .sort({ createdAt: -1 })
-//       .skip((pageNum - 1) * pageSize)
-//       .limit(pageSize);
-//     const countPromise = Blog.countDocuments();
-//     const [blogs, count] = await Promise.all([blogsPromise, countPromise]);
-//     const pagesCount = Math.ceil(count / pageSize);
-//     res.json({ blogs, pagesCount });
-//   })
-// );
+router.get(
+  '/received',
+  authUser,
+  asyncRouterWrapper(async (req, res, next) => {
+    const messages = await Message.find({ recieverId: req.user._id })
+      .populate({ path: 'authorId', select: 'firstName lastName email' })
+      .sort({ createdAt: -1 });
+    res.json(messages);
+  })
+);
 
 //Add Message
 router.post(
@@ -64,33 +57,40 @@ router.post(
 );
 
 //Update Blog
-// router.patch(
-//   '/:id',
-//   authUser,
-//   checkBlogOwner,
-//   asyncRouterWrapper(async (req, res, next) => {
-//     delete req.body.createdAt;
-//     delete req.body.updatedAt;
-//     delete req.body.__V;
-//     console.log(req.body);
-//     const updatedBlog = await Blog.findByIdAndUpdate(req.params.id, req.body, {
-//       strict: 'throw',
-//     });
-//     if (!updatedBlog) throw new CustomError('Blog Not Found!', 404);
-//     res.send({ message: 'Blog Updated Succ', blog: updatedBlog });
-//   })
-// );
+router.patch(
+  '/:id',
+  authUser,
+  checkMessageOwner,
+  asyncRouterWrapper(async (req, res, next) => {
+    delete req.body.createdAt;
+    delete req.body.updatedAt;
+    delete req.body.__V;
+    console.log(req.body);
+    const updatedMessage = await Message.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      {
+        strict: 'throw',
+      }
+    );
+    if (!updatedMessage) throw new CustomError('Message Not Found!', 404);
+    res.send({
+      message: 'Message Updated Succ',
+      messageUpdated: updatedMessage,
+    });
+  })
+);
 
-// //Delete Blog
-// router.delete(
-//   '/:id',
-//   authUser,
-//   checkBlogOwner,
-//   asyncRouterWrapper(async (req, res, next) => {
-//     const deletedBlog = await Blog.findByIdAndRemove(req.params.id);
-//     if (!deletedBlog) throw new CustomError('Blog Not Found!', 404);
-//     res.send({ message: 'Deleted Succ' });
-//   })
-// );
+//Delete Message
+router.delete(
+  '/:id',
+  authUser,
+  checkMessageOwner,
+  asyncRouterWrapper(async (req, res, next) => {
+    const deletedMessage = await Message.findByIdAndRemove(req.params.id);
+    if (!deletedMessage) throw new CustomError('Message Not Found!', 404);
+    res.send({ message: 'Deleted Succ' });
+  })
+);
 
 module.exports = router;
