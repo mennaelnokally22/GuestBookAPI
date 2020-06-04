@@ -5,7 +5,8 @@ const CustomError = require('../helpers/customError');
 
 module.exports = async (req, res, next) => {
   const authorization = req.headers.authorization;
-  if (!authorization) throw new Error('Not Authorized');
+  console.log(authorization);
+  if (!authorization) next(new CustomError('Not Authorized', 402));
   jwt.verify(authorization, jwtSecretKey, async (err, decoded) => {
     if (err) {
       const err = new CustomError('Token expired!', 404);

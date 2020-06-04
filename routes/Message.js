@@ -22,6 +22,16 @@ router.get(
   })
 );
 
+router.get(
+  '/sent',
+  authUser,
+  asyncRouterWrapper(async (req, res, next) => {
+    const messages = await Message.find({ authorId: req.user._id })
+      .populate({ path: 'authorId', select: 'firstName lastName email' })
+      .sort({ createdAt: -1 });
+    res.json(messages);
+  })
+);
 //Add Message
 router.post(
   '/',
@@ -85,7 +95,6 @@ router.patch(
 router.delete(
   '/:id',
   authUser,
-  checkMessageOwner,
   asyncRouterWrapper(async (req, res, next) => {
     const deletedMessage = await Message.findByIdAndRemove(req.params.id);
     if (!deletedMessage) throw new CustomError('Message Not Found!', 404);
