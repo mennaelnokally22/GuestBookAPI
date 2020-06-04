@@ -66,6 +66,45 @@ router.post(
   })
 );
 
+router.post(
+  '/reply/:id',
+  authUser,
+  asyncRouterWrapper(async (req, res, next) => {
+    req.body.authorId = req.user._id;
+    console.log('body', req.body);
+
+    const { title, body, email } = req.body;
+    const { id } = req.params;
+    const result = await User.findOne({ email });
+    console.log(result);
+    if (result != null) {
+      const message = new Message({
+        authorId: req.user._id,
+        recieverId: result._id,
+        title,
+        body,
+      });
+      const populatedMessage = await Message.populate(message, {
+        path: 'authorId',
+        select: 'firstName lastName email',
+      });
+      const addedMessage = await populatedMessage.save();
+      console.log(addedMessage);
+      const updatedMessage = await Message.findByIdAndUpdate(
+        id,
+        { $push: { replies: addedMessage._id } },
+        { strict: 'throw' }
+      );
+      console.log(updatedMessage);
+      res
+        .status(200)
+        .send({ message: 'Added Succ', messageSent: addedMessage });
+    } else {
+      res.status(404).send({ message: 'User not found!' });
+    }
+  })
+);
+
 //Update Blog
 router.patch(
   '/:id',

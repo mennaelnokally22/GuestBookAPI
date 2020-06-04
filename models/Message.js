@@ -25,6 +25,12 @@ const messageSchema = new mongoose.Schema(
       min: [20, 'Body must be at least 20 characters!'],
       required: [true, 'Body is required!'],
     },
+    replies: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Message',
+      },
+    ],
   },
   { timestamps: true }
 );
